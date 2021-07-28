@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_updater/flutter_updater.dart';
 import 'package:version/version.dart';
 
@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     var version = Version.parse('1.0.0');
-    var manager = UpdateManager(version, iosAppId: '1166499145');
+    var manager = UpdateManager(version, iosAppId: 1166499145);
     result = await manager.checkUpdates();
     setState(() {
       _result = result;
