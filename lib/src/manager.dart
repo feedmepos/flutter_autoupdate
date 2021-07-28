@@ -10,7 +10,7 @@ import 'providers/app_id.dart';
 import 'providers/url.dart';
 
 class DownloadProgress {
-  DownloadProgress(this.received, this.total, this.destination);
+  DownloadProgress(this.received, this.total, {this.destination = ""});
 
   final int received;
   final int total;
@@ -19,6 +19,11 @@ class DownloadProgress {
   double get progress => received / total * 100;
 
   bool get completed => progress == 100;
+
+  String toPrettyMB(int bytes, {int decimalPoint = 2}) {
+    var mb = bytes / 1024 / 1024;
+    return '${mb.toStringAsFixed(decimalPoint)}MB';
+  }
 }
 
 class UpdateResult {
@@ -42,7 +47,7 @@ class UpdateResult {
 
       /// So the progress will be completed
       /// 1/1*100 = 100%
-      controller.add(DownloadProgress(1, 1, ""));
+      controller.add(DownloadProgress(1, 1));
       return controller;
     } else if (Platform.isAndroid || Platform.isWindows) {
       var dir = await getApplicationDocumentsDirectory();
@@ -51,7 +56,7 @@ class UpdateResult {
       var dio = Dio();
       dio.download(downloadUrl, filePath, onReceiveProgress: (received, total) {
         if (total != -1) {
-          controller.add(DownloadProgress(received, total, filePath));
+          controller.add(DownloadProgress(received, total));
         }
       });
       return controller;

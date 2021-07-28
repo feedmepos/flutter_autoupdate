@@ -24,14 +24,10 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  late UpdateResult _result;
-  late DownloadProgress _download;
+  UpdateResult? _result;
+  DownloadProgress? _download;
   var _startTime = DateTime.now().millisecondsSinceEpoch;
   var _bytesPerSec = 0;
-
-  double bytesToMb(int bytes) {
-    return bytes / 1024 / 1000;
-  }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
@@ -60,18 +56,21 @@ class _MyAppState extends State<MyApp> {
       versionUrl =
           'https://storage.googleapis.com/download-dev.feedmepos.com/version_windows_sample.json';
     }
-    var version = Version.parse('1.0.0');
-    var manager = UpdateManager(version, versionUrl: versionUrl);
+    var manager = UpdateManager(Version.parse('1.0.0'), versionUrl: versionUrl);
     try {
       result = await manager.checkUpdates();
       var controller = await result.initializeUpdate();
-      var stream = controller.stream;
-      stream.listen((event) async {
+      controller.stream.listen((event) async {
         if (event.completed) {
+          print("Downloaded completed");
           await controller.close();
           return;
         }
         setState(() {
+          if (DateTime.now().millisecondsSinceEpoch - _startTime >= 1000) {
+            _startTime = DateTime.now().millisecondsSinceEpoch;
+            _bytesPerSec = event.received - _bytesPerSec;
+          }
           _download = event;
         });
       });
@@ -92,12 +91,17 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Latest version: ${_result.latestVersion}\n'
-              'Url: ${_result.downloadUrl}\n'
-              'Release Notes: ${_result.releaseNotes}\n'
-              'Relase Date: ${_result.releaseDate}\n\n'
-              'Download: ${bytesToMb(_download.received).toStringAsFixed(2)}Mb/${bytesToMb(_download.total).toStringAsFixed(2)}Mb (${_download.progress.toInt()}%)\n'
-              'Destination: ${_download.destination}'),
+          child: _download != null
+              ? Text('Latest version: ${_result!.latestVersion}\n'
+                  'Url: ${_result!.downloadUrl}\n'
+                  'Release Notes: ${_result!.releaseNotes}\n'
+                  'Relase Date: ${_result!.releaseDate}\n\n'
+                  'File: ${_download!.toPrettyMB(_download!.received)}/'
+                  '${_download!.toPrettyMB(_download!.total)} '
+                  '(${_download!.progress.toInt()}%)\n'
+                  'Speed: ${_download!.toPrettyMB(_bytesPerSec)}/s\n'
+                  'Destination: ${_download!.destination}')
+              : null,
         ),
       ),
     );
