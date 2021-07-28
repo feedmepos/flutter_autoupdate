@@ -1,26 +1,35 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_updater/flutter_updater.dart';
 import 'package:flutter_updater/src/updater.dart';
 import 'package:version/version.dart';
 
 class UrlResult {
-  UrlResult(this.version, this.url);
+  UrlResult(
+      {required this.version,
+      required this.downloadUrl,
+      required this.releaseNotes,
+      required this.releaseDate});
 
   final Version version;
-  final String url;
+  final String downloadUrl;
+  final String releaseNotes;
+  final String releaseDate;
 
-  factory UrlResult.fromJson(Map<String, dynamic> json) =>
-      UrlResult(Version.parse(json["version"]), json["url"]);
+  factory UrlResult.fromJson(Map<String, dynamic> json) => UrlResult(
+      version: Version.parse(json["version"]),
+      downloadUrl: json["url"],
+      releaseNotes: json["releaseNotes"],
+      releaseDate: json["releaseDate"]);
 
   Map<String, dynamic> toJson() => {
         "version": version.toString(),
-        "url": url,
+        "downloadUrl": downloadUrl,
+        "releaseNotes": releaseNotes,
+        "releaseDate": releaseDate
       };
 }
 
-class Url extends Updater {
+class Url extends Provider {
   Url(this.versionUrl);
 
   final String versionUrl;
@@ -28,14 +37,20 @@ class Url extends Updater {
   @override
   Future<UpdateResult> fetchUpdate() async {
     var res = await Dio().get(versionUrl);
-    var decoded = json.decode(res.data);
-    if (decoded is List) {
-      var list = decoded.map((item) => UrlResult.fromJson(item)).toList();
+    if (res.data is List) {
+      var list = res.data.map((item) => UrlResult.fromJson(item)).toList();
       return UpdateResult(
-          latestVersion: list[0].version, directUrl: list[0].url);
+          latestVersion: list[0].version,
+          downloadUrl: list[0].downloadUrl,
+          releaseNotes: list[0].releaseNotes,
+          releaseDate: list[0].releaseDate);
     } else {
-      var result = UrlResult.fromJson(decoded);
-      return UpdateResult(latestVersion: result.version, directUrl: result.url);
+      var result = UrlResult.fromJson(res.data);
+      return UpdateResult(
+          latestVersion: result.version,
+          downloadUrl: result.downloadUrl,
+          releaseNotes: result.releaseNotes,
+          releaseDate: result.releaseDate);
     }
   }
 

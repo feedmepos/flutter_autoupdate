@@ -6,13 +6,13 @@ import 'package:flutter_updater/src/updater.dart';
 import 'package:version/version.dart';
 
 class IosLookupResponse {
-  IosLookupResponse(this.count, this.results);
+  IosLookupResponse({required this.count, required this.results});
 
   final int count;
   final List<dynamic> results;
 
   factory IosLookupResponse.fromJson(Map<String, dynamic> json) =>
-      IosLookupResponse(json["resultCount"], json["results"]);
+      IosLookupResponse(count: json["resultCount"], results: json["results"]);
 
   Map<String, dynamic> toJson() => {
         "resultCount": count,
@@ -20,20 +20,24 @@ class IosLookupResponse {
       };
 }
 
-class IosAppId extends Updater {
-  IosAppId(this.appId);
+class IosAppId extends Provider {
+  IosAppId(this.appId, this.countryCode);
 
   final int appId;
+  final String countryCode;
 
   @override
   Future<UpdateResult> fetchUpdate() async {
     var res = await Dio().get('https://itunes.apple.com/lookup?id=$appId');
     if (res.statusCode == 200) {
       var decoded = IosLookupResponse.fromJson(json.decode(res.data));
-      if (decoded.count > 0) {
-        var version = Version.parse(decoded.results[0]["version"]);
+      if (decoded.count > 0 && decoded.results.isNotEmpty) {
+        var result = decoded.results[0];
         return UpdateResult(
-            latestVersion: version, directUrl: buildUpdateUrl());
+            latestVersion: Version.parse(result["version"]),
+            downloadUrl: buildUpdateUrl(),
+            releaseNotes: result["releaseNotes"],
+            releaseDate: result["currentVersionReleaseDate"]);
       } else {
         throw Exception(
             "Fail to fetch results for the app id. App id may be invalid.");
