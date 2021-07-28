@@ -59,24 +59,24 @@ class _MyAppState extends State<MyApp> {
     var manager = UpdateManager(Version.parse('1.0.0'), versionUrl: versionUrl);
     try {
       result = await manager.checkUpdates();
+      setState(() {
+        _result = result;
+      });
+
       var controller = await result.initializeUpdate();
       controller.stream.listen((event) async {
-        if (event.completed) {
-          print("Downloaded completed");
-          await controller.close();
-          return;
-        }
         setState(() {
           if (DateTime.now().millisecondsSinceEpoch - _startTime >= 1000) {
             _startTime = DateTime.now().millisecondsSinceEpoch;
-            _bytesPerSec = event.received - _bytesPerSec;
+            _bytesPerSec = event.receivedBytes - _bytesPerSec;
           }
           _download = event;
         });
-      });
-
-      setState(() {
-        _result = result;
+        if (event.completed) {
+          print("Downloaded completed");
+          await controller.close();
+          await result.runUpdate(event.path, autoExit: true);
+        }
       });
     } on Exception catch (e) {
       print(e);
@@ -96,11 +96,11 @@ class _MyAppState extends State<MyApp> {
                   'Url: ${_result!.downloadUrl}\n'
                   'Release Notes: ${_result!.releaseNotes}\n'
                   'Relase Date: ${_result!.releaseDate}\n\n'
-                  'File: ${_download!.toPrettyMB(_download!.received)}/'
-                  '${_download!.toPrettyMB(_download!.total)} '
+                  'File: ${_download!.toPrettyMB(_download!.receivedBytes)}/'
+                  '${_download!.toPrettyMB(_download!.totalBytes)} '
                   '(${_download!.progress.toInt()}%)\n'
                   'Speed: ${_download!.toPrettyMB(_bytesPerSec)}/s\n'
-                  'Destination: ${_download!.destination}')
+                  'Destination: ${_download!.path}')
               : null,
         ),
       ),
