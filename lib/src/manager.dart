@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
+import 'package:app_installer/app_installer.dart';
 
 import 'providers/app_id.dart';
 import 'providers/url.dart';
@@ -65,9 +65,11 @@ class UpdateResult {
       controller.add(DownloadProgress(1, 1, path: downloadUrl));
       return controller;
     } else if (Platform.isAndroid || Platform.isWindows) {
-      var dir = await getTemporaryDirectory();
+      var dir = Platform.isAndroid
+          ? await getExternalStorageDirectory()
+          : await getTemporaryDirectory();
       var fileSuffix = Platform.isAndroid ? 'apk' : 'exe';
-      var filePath = '${dir.path}/feedme_$latestVersion.$fileSuffix';
+      var filePath = '${dir!.path}/feedme_$latestVersion.$fileSuffix';
       var dio = Dio();
       dio.download(downloadUrl, filePath, onReceiveProgress: (received, total) {
         if (total != -1) {
@@ -97,9 +99,9 @@ class UpdateResult {
       await canLaunch(downloadUrl)
           ? await launch(downloadUrl)
           : throw Exception("Fail to launch App Store url");
-    }
-    if (Platform.isAndroid) {}
-    if (Platform.isWindows) {
+    } else if (Platform.isAndroid) {
+      await AppInstaller.installApk(uri);
+    } else if (Platform.isWindows) {
       // Start the process using Windows shell instead of our parent process.
       // A detached process has no connection to its parent,
       // and can keep running on its own when the parent dies
@@ -113,6 +115,8 @@ class UpdateResult {
       } on Exception catch (e) {
         throw Exception("Failed to execute the file. Error: $e");
       }
+    } else {
+      throw Exception("Platform not supported");
     }
   }
 }
