@@ -1,12 +1,89 @@
 # flutter_updater
 
-We wanted to implement auto-update functionality for Android, iOS, and Windows using a versioning JSON file; thus, this package was born. It supports checking if an update is available, downloading the latest executable, and install the file.
+This library allows you to easily add auto-update functionality to your Android, iOS, and Windows Flutter application. 
 
-# Versioning
+Our use case was to update the app by launching the App Store on iOS or install/execute the Android APK or Windows executable; thus, this package was born. To use this package, you should adhere to the format of the Version Template below.
+
+## Features
+- Fetch updates from iTunes App Store/remote URL
+- Launch App Store
+- Download functionality with progress
+- SHA512 hash checksum on download
+
+## Installation
+
+Add the following to your Android app.
+
+- AndroidManifest.xml
+```xml
+<!-- Provider -->
+<provider
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="${applicationId}.fileProvider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/file_paths" />
+</provider>
+```
+
+- android/app/src/main/res/xml/file_paths.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path path="Android/data/<package name>/" name="files_root" />
+    <external-path path="." name="external_storage_root" />
+</paths>
+```
+Update the `<package name>` to your app package name
+
+## Examples
+
+```dart
+import 'package:flutter_updater/flutter_updater.dart';
+
+// Android/Windows
+var manager = UpdateManager(versionUrl: 'versionUrl');
+
+// iOS
+var manager = UpdateManager(appId: 1500009417);
+
+// App Store country code, this flag is optional and only applies to iOS
+var result = await manager.fetchUpdates(countryCode: 'my');
+print(result.latestVersion);
+print(result.downloadUrl);
+print(result.releaseNotes);
+print(result.releaseDate);
+ 
+if (result.latestVersion > Version.parse('1.0.0')) {
+  // Get update stream controller
+  var update = await result.initializeUpdate();
+  update.stream.listen((event) async {
+    // You can build a download progressbar from the data available here
+    print(event.receivedBytes);
+    print(event.totalBytes);
+    if (event.completed) {
+      print('Download completed');
+
+      // Close the stream controller
+      await update.close();
+
+      // On Windows, autoExit and exitDelay flag are supported.
+      // On iOS, this will attempt to launch the App Store from the appId provided
+      // On Android, this will simply attempt to install the downloaded APK
+      await result.runUpdate(event.path, autoExit: true, exitDelay: 5000);
+    }
+  });
+}
+```
+For more information, check out the [examples](https://github.com/feedmepos/flutter_updater/tree/master/example).
+
+## Version Template
 
 By default, it will select the first index as the latest version. For more examples, sample.json is available for reference.
 
-## Android
+### Android
 ```json
 [
   {
@@ -26,7 +103,7 @@ By default, it will select the first index as the latest version. For more examp
 ]
 ```
 
-## Windows
+### Windows
 ```json
 [
   {
@@ -39,14 +116,13 @@ By default, it will select the first index as the latest version. For more examp
 ]
 ```
 
-## iOS
+### iOS
 
 It supports fetching updates by app id using the official [iTunes Search API](https://itunes.apple.com/lookup?id=1500009417&country=my).
 
-# Features
-- Fetch updates from iTunes App Store/URL
-- Download functionality with progress
-- SHA512 hash checksum on download
+
+# Contributing
+We welcome the community to submit pull requests.
 
 # Bugs
 - Unable to install APK automatically after enabling "Install from unknown sources" from prompt
