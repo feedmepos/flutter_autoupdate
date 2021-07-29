@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    UpdateResult result;
+    UpdateResult? result;
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -57,15 +57,15 @@ class _MyAppState extends State<MyApp> {
     /// Android/Windows
     var manager = UpdateManager(versionUrl: versionUrl);
     /// iOS
-    // var manager = UpdateManager(appId: 1500009417);
+    // var manager = UpdateManager(appId: 1500009417, countryCode: 'my');
     try {
-      result = await manager.fetchUpdates(countryCode: 'my');
+      result = await manager.fetchUpdates();
       setState(() {
         _result = result;
       });
-      if (Version.parse('1.0.0') < result.latestVersion) {
-        var controller = await result.initializeUpdate();
-        controller.stream.listen((event) async {
+      if (Version.parse('1.0.0') < result?.latestVersion) {
+        var controller = await result?.initializeUpdate();
+        controller?.stream.listen((event) async {
           setState(() {
             if (DateTime.now().millisecondsSinceEpoch - _startTime >= 1000) {
               _startTime = DateTime.now().millisecondsSinceEpoch;
@@ -76,7 +76,7 @@ class _MyAppState extends State<MyApp> {
           if (event.completed) {
             print("Downloaded completed");
             await controller.close();
-            await result.runUpdate(event.path, autoExit: true);
+            await result?.runUpdate(event.path, autoExit: true);
           }
         });
       }

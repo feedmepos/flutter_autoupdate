@@ -51,15 +51,15 @@ var updater = UpdateManager(appId: 1500009417, countryCode: 'my');
 
 // App Store country code, this flag is optional and only applies to iOS
 var result = await updater.fetchUpdates();
-print(result.latestVersion);
-print(result.downloadUrl);
-print(result.releaseNotes);
-print(result.releaseDate);
+print(result?.latestVersion);
+print(result?.downloadUrl);
+print(result?.releaseNotes);
+print(result?.releaseDate);
  
-if (result.latestVersion > Version.parse('1.0.0')) {
+if (result?.latestVersion > Version.parse('1.0.0')) {
   // Get update stream controller
-  var update = await result.initializeUpdate();
-  update.stream.listen((event) async {
+  var update = await result?.initializeUpdate();
+  update?.stream.listen((event) async {
     // You can build a download progressbar from the data available here
     print(event.receivedBytes);
     print(event.totalBytes);
@@ -72,7 +72,7 @@ if (result.latestVersion > Version.parse('1.0.0')) {
       // On Windows, autoExit and exitDelay flag are supported.
       // On iOS, this will attempt to launch the App Store from the appId provided
       // On Android, this will simply attempt to install the downloaded APK
-      await result.runUpdate(event.path, autoExit: true, exitDelay: 5000);
+      await result?.runUpdate(event.path, autoExit: true, exitDelay: 5000);
     }
   });
 }
