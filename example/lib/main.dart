@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_updater/flutter_updater.dart';
+import 'package:flutter_autoupdate/flutter_autoupdate.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:version/version.dart';
 

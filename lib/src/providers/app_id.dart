@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_updater/flutter_updater.dart';
-import 'package:flutter_updater/src/providers/provider.dart';
+import 'package:flutter_autoupdate/flutter_autoupdate.dart';
+import 'package:flutter_autoupdate/src/providers/provider.dart';
 import 'package:version/version.dart';
 
 class IosLookupResponse {

@@ -1,8 +1,8 @@
-name: flutter_updater
+name: flutter_autoupdate
 description: Easily add auto update functionality to your Flutter application
 version: 1.0.0
 author: Victor See<hello@imvictor.me>
-homepage: https://github.com/feedmepos/flutter_updater
+homepage: https://github.com/feedmepos/flutter_autoupdate
 
 environment:
   sdk: ">=2.13.0 <3.0.0"

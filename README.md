@@ -41,7 +41,7 @@ Update the `<package name>` to your app package name
 ## Examples
 
 ```dart
-import 'package:flutter_updater/flutter_updater.dart';
+import 'package:flutter_updater/flutter_autoupdate.dart';
 
 // Android/Windows
 var updater = UpdateManager(versionUrl: 'versionUrl');
