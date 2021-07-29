@@ -44,13 +44,13 @@ Update the `<package name>` to your app package name
 import 'package:flutter_updater/flutter_updater.dart';
 
 // Android/Windows
-var manager = UpdateManager(versionUrl: 'versionUrl');
+var updater = UpdateManager(versionUrl: 'versionUrl');
 
 // iOS
-var manager = UpdateManager(appId: 1500009417);
+var updater = UpdateManager(appId: 1500009417, countryCode: 'my');
 
 // App Store country code, this flag is optional and only applies to iOS
-var result = await manager.fetchUpdates(countryCode: 'my');
+var result = await updater.fetchUpdates();
 print(result.latestVersion);
 print(result.downloadUrl);
 print(result.releaseNotes);

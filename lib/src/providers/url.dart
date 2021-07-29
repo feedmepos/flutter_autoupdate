@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_updater/flutter_updater.dart';
-import 'package:flutter_updater/src/updater.dart';
+import 'package:flutter_updater/src/providers/provider.dart';
 import 'package:version/version.dart';
 
 class Url extends Provider {
@@ -9,7 +9,7 @@ class Url extends Provider {
   final String versionUrl;
 
   @override
-  Future<UpdateResult> fetchUpdate({String countryCode = 'US'}) async {
+  Future<UpdateResult?> fetchUpdate() async {
     var res = await Dio().get(versionUrl);
     if (res.data is List) {
       var list = res.data.map((item) => UpdateResult.fromJson(item)).toList();

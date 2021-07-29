@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_updater/flutter_updater.dart';
-import 'package:flutter_updater/src/updater.dart';
+import 'package:flutter_updater/src/providers/provider.dart';
 import 'package:version/version.dart';
 
 class IosLookupResponse {
@@ -27,7 +27,7 @@ class IosAppId extends Provider {
   final String countryCode;
 
   @override
-  Future<UpdateResult> fetchUpdate({String countryCode = 'US'}) async {
+  Future<UpdateResult?> fetchUpdate() async {
     var res = await Dio()
         .get('https://itunes.apple.com/lookup?id=$appId&country=$countryCode');
     if (res.statusCode == 200) {
