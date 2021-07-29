@@ -1,6 +1,6 @@
 name: flutter_updater
 description: Easily add auto update functionality to your Flutter application
-version: 0.0.1
+version: 1.0.0
 homepage:
 
 environment:
@@ -27,19 +27,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
-  # This section identifies this Flutter project as a plugin project.
-  # The 'pluginClass' and Android 'package' identifiers should not ordinarily
-  # be modified. They are used by the tooling to maintain consistency when
-  # adding or updating assets for this project.
-  plugin:
-    platforms:
-      android:
-        package: cc.feedme.flutter_updater
-        pluginClass: FlutterUpdaterPlugin
-      ios:
-        pluginClass: FlutterUpdaterPlugin
-      windows:
-        pluginClass: FlutterUpdaterPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
