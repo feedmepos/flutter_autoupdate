@@ -11,9 +11,17 @@ Our use case was to update the app by launching the App Store on iOS or install/
 - SHA512 hash checksum on download
 
 ## Installation
+Run the following command 
+```
+flutter pub add flutter_autoupdate
+```
+
+Import the package
+```
+import 'package:flutter_autoupdate/flutter_autoupdate.dart';
+```
 
 Add the following to your Android app.
-
 - AndroidManifest.xml
 ```xml
 <!-- Provider -->
