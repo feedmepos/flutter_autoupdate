@@ -53,12 +53,13 @@ class _MyAppState extends State<MyApp> {
       versionUrl =
           'https://storage.googleapis.com/download-dev.feedmepos.com/version_windows_sample.json';
     }
+
     /// Android/Windows
     var manager = UpdateManager(versionUrl: versionUrl);
     /// iOS
-    //var manager = UpdateManager(appId: 1500009417);
+    // var manager = UpdateManager(appId: 1500009417);
     try {
-      result = await manager.checkUpdates();
+      result = await manager.fetchUpdates(countryCode: 'my');
       setState(() {
         _result = result;
       });

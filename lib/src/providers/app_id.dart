@@ -27,8 +27,9 @@ class IosAppId extends Provider {
   final String countryCode;
 
   @override
-  Future<UpdateResult> fetchUpdate() async {
-    var res = await Dio().get('https://itunes.apple.com/lookup?id=$appId');
+  Future<UpdateResult> fetchUpdate({String countryCode = 'US'}) async {
+    var res = await Dio()
+        .get('https://itunes.apple.com/lookup?id=$appId&country=$countryCode');
     if (res.statusCode == 200) {
       var decoded = IosLookupResponse.fromJson(json.decode(res.data));
       if (decoded.count > 0 && decoded.results.isNotEmpty) {
@@ -39,8 +40,7 @@ class IosAppId extends Provider {
             releaseNotes: result["releaseNotes"],
             releaseDate: result["currentVersionReleaseDate"]);
       } else {
-        throw Exception(
-            "Fail to fetch results for the app id. App id may be invalid.");
+        throw Exception("Fail to fetch results for the app id.");
       }
     } else {
       throw Exception(

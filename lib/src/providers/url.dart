@@ -9,7 +9,7 @@ class Url extends Provider {
   final String versionUrl;
 
   @override
-  Future<UpdateResult> fetchUpdate() async {
+  Future<UpdateResult> fetchUpdate({String countryCode = 'US'}) async {
     var res = await Dio().get(versionUrl);
     if (res.data is List) {
       var list = res.data.map((item) => UpdateResult.fromJson(item)).toList();

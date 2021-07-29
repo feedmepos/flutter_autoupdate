@@ -88,8 +88,7 @@ class UpdateResult {
 
   Future<StreamController<DownloadProgress>> initializeUpdate() async {
     if (Platform.isIOS) {
-      /// So the progress will be completed
-      /// 1/1*100 = 100%
+      await runUpdate(downloadUrl);
       throw Exception(
           "initializeUpdate is not supported on iOS. You should use runUpdate instead");
     } else if (Platform.isAndroid || Platform.isWindows) {
@@ -192,10 +191,11 @@ class UpdateManager {
   /// [countryCode] is ISO 3166-1-alpha-2 country code
   ///
   /// Example: US, EU, UK, SG, MY
-  Future<UpdateResult> checkUpdates({String countryCode = 'US'}) async {
+  Future<UpdateResult> fetchUpdates({String countryCode = 'US'}) async {
     if (Platform.isIOS) {
       assert(appId != null, "appId must not be null for iOS");
-      return await IosAppId(appId!, countryCode).fetchUpdate();
+      return await IosAppId(appId!, countryCode)
+          .fetchUpdate(countryCode: countryCode);
     } else if (Platform.isAndroid || Platform.isWindows) {
       assert(versionUrl != null,
           'versionUrl must not be null for the current platform.');
