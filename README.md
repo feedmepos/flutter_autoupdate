@@ -13,13 +13,15 @@ By default, it will select the first index as the latest version. For more examp
     "version": "3.0.0",
     "url": "https://storage.googleapis.com/download-dev.feedmepos.com/android/feedme-pos-3.0.0-beta.5.apk",
     "releaseNotes": "New update 3.0.0!",
-    "releaseDate": "2021-07-28T11:58:25Z"
+    "releaseDate": "2021-07-28T11:58:25Z",
+    "sha512": "2e0349c1e729eac0f4cb9f831fa1130241743c8db9e115013091dbeec6b8b86dc18c62bcbfab516033869c8ec8c8967615c622303d4bee62640c3b507051aca2"
   },
   {
     "version": "1.4.5",
     "url": "https://storage.googleapis.com/download-dev.feedmepos.com/android/feedme-pos-1.4.5.apk",
     "releaseNotes": "New update 1.4.5!",
-    "releaseDate": "2021-06-16T11:58:25Z"
+    "releaseDate": "2021-06-16T11:58:25Z",
+    "sha512": "f028475ad562f9f9566213774b02e0bd3ac2198899222687613937791307ec5d326cfb79ee2882273bffd6777f9c76371d6b2eed7d46e326fd687bc95e2edb2a"
   }
 ]
 ```
