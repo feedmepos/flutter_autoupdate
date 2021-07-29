@@ -46,38 +46,39 @@ class _MyAppState extends State<MyApp> {
     }
 
     var versionUrl;
-    if (Platform.isIOS) {
-      versionUrl =
-          'https://storage.googleapis.com/download-dev.feedmepos.com/version_ios_sample.json';
-    } else if (Platform.isAndroid) {
+    if (Platform.isAndroid) {
       versionUrl =
           'https://storage.googleapis.com/download-dev.feedmepos.com/version_android_sample.json';
     } else if (Platform.isWindows) {
       versionUrl =
           'https://storage.googleapis.com/download-dev.feedmepos.com/version_windows_sample.json';
     }
-    var manager = UpdateManager(Version.parse('1.0.0'), versionUrl: versionUrl);
+    /// Android/Windows
+    var manager = UpdateManager(versionUrl: versionUrl);
+    /// iOS
+    //var manager = UpdateManager(appId: 1500009417);
     try {
       result = await manager.checkUpdates();
       setState(() {
         _result = result;
       });
-
-      var controller = await result.initializeUpdate();
-      controller.stream.listen((event) async {
-        setState(() {
-          if (DateTime.now().millisecondsSinceEpoch - _startTime >= 1000) {
-            _startTime = DateTime.now().millisecondsSinceEpoch;
-            _bytesPerSec = event.receivedBytes - _bytesPerSec;
+      if (Version.parse('1.0.0') < result.latestVersion) {
+        var controller = await result.initializeUpdate();
+        controller.stream.listen((event) async {
+          setState(() {
+            if (DateTime.now().millisecondsSinceEpoch - _startTime >= 1000) {
+              _startTime = DateTime.now().millisecondsSinceEpoch;
+              _bytesPerSec = event.receivedBytes - _bytesPerSec;
+            }
+            _download = event;
+          });
+          if (event.completed) {
+            print("Downloaded completed");
+            await controller.close();
+            await result.runUpdate(event.path, autoExit: true);
           }
-          _download = event;
         });
-        if (event.completed) {
-          print("Downloaded completed");
-          await controller.close();
-          await result.runUpdate(event.path, autoExit: true);
-        }
-      });
+      }
     } on Exception catch (e) {
       print(e);
     }

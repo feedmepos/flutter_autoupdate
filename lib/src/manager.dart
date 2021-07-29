@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app_installer/app_installer.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
-import 'package:app_installer/app_installer.dart';
 
 import 'providers/app_id.dart';
 import 'providers/url.dart';
@@ -34,6 +35,10 @@ class DownloadProgress {
     var mb = bytes / 1024 / 1024;
     return '${mb.toStringAsFixed(decimalPoint)}MB';
   }
+
+  static DownloadProgress completedEvent(FilePath path) {
+    return DownloadProgress(1, 1, path: path);
+  }
 }
 
 /// Update results fetched from App Store/custom version URL
@@ -50,36 +55,86 @@ class UpdateResult {
       {required this.latestVersion,
       required this.downloadUrl,
       required this.releaseNotes,
-      required this.releaseDate});
+      required this.releaseDate,
+      this.sha512});
 
   final Version latestVersion;
   final String downloadUrl;
   final String releaseNotes;
   final String releaseDate;
+  final String? sha512;
+
+  factory UpdateResult.fromJson(Map<String, dynamic> json) {
+    var version = json["version"];
+    var url = json["url"];
+    var rNotes = json["releaseNotes"];
+    var rDate = json["releaseDate"];
+    var checksum = json["sha512"];
+    return UpdateResult(
+        latestVersion: Version.parse(version),
+        downloadUrl: url,
+        releaseNotes: rNotes,
+        releaseDate: rDate,
+        sha512: checksum);
+  }
+
+  Map<String, dynamic> toJson() => {
+        "version": latestVersion.toString(),
+        "downloadUrl": downloadUrl,
+        "releaseNotes": releaseNotes,
+        "releaseDate": releaseDate,
+        "sha512": sha512
+      };
 
   Future<StreamController<DownloadProgress>> initializeUpdate() async {
-    var controller = StreamController<DownloadProgress>();
     if (Platform.isIOS) {
       /// So the progress will be completed
       /// 1/1*100 = 100%
-      controller.add(DownloadProgress(1, 1, path: downloadUrl));
-      return controller;
+      throw Exception(
+          "initializeUpdate is not supported on iOS. You should use runUpdate instead");
     } else if (Platform.isAndroid || Platform.isWindows) {
       var dir = Platform.isAndroid
           ? await getExternalStorageDirectory()
           : await getTemporaryDirectory();
-      var fileSuffix = Platform.isAndroid ? 'apk' : 'exe';
-      var filePath = '${dir!.path}/feedme_$latestVersion.$fileSuffix';
-      var dio = Dio();
-      dio.download(downloadUrl, filePath, onReceiveProgress: (received, total) {
-        if (total != -1) {
-          controller.add(DownloadProgress(received, total, path: filePath));
-        }
-      });
-      return controller;
+      var urlContent = downloadUrl.split('/');
+      if (urlContent.isEmpty) {
+        throw Exception("The download URL may be invalid.");
+      }
+      // Split a URL and retrieve the file name
+      var filePath = '${dir!.path}/${urlContent[urlContent.length - 1]}';
+      return initDownload(filePath);
     } else {
       throw Exception('Platform not supported');
     }
+  }
+
+  Future<StreamController<DownloadProgress>> initDownload(FilePath path) async {
+    var controller = StreamController<DownloadProgress>();
+    var file = File(path);
+    if (await file.exists()) {
+      var bytes = await file.readAsBytes();
+      var sha512 = crypto.sha512.convert(bytes);
+      // Checksum is identical
+      // Emit completed event
+      if (sha512.toString() == this.sha512) {
+        controller.add(DownloadProgress.completedEvent(path));
+      } else {
+        await _beginDownload(controller, path);
+      }
+    } else {
+      await _beginDownload(controller, path);
+    }
+    return controller;
+  }
+
+  Future<void> _beginDownload(
+      StreamController controller, FilePath path) async {
+    var dio = Dio();
+    await dio.download(downloadUrl, path, onReceiveProgress: (received, total) {
+      if (total != -1) {
+        controller.add(DownloadProgress(received, total, path: path));
+      }
+    });
   }
 
   /// Install/navigate to the respective file on OS
@@ -94,7 +149,7 @@ class UpdateResult {
   ///
   /// [autoExit] parent process, only applies to Windows
   Future<void> runUpdate(FilePath uri,
-      {bool autoExit = false, int exitDelay = 5000}) async {
+      {bool autoExit = false, int exitDelay = 3000}) async {
     if (Platform.isIOS) {
       await canLaunch(downloadUrl)
           ? await launch(downloadUrl)
@@ -123,13 +178,12 @@ class UpdateResult {
 
 /// Application [currentVersion]
 ///
-/// Version changelog url [versionUrl]
+/// Optional [versionUrl], for Android & Windows
 ///
-/// Optional [appId], providing it will force it to fetch update from iTunes App Store instead
+/// Optional [appId], for iOS
 class UpdateManager {
-  UpdateManager(this.currentVersion, {this.versionUrl, this.appId});
+  UpdateManager({this.versionUrl, this.appId});
 
-  Version currentVersion;
   String? versionUrl;
   int? appId;
 
@@ -140,13 +194,8 @@ class UpdateManager {
   /// Example: US, EU, UK, SG, MY
   Future<UpdateResult> checkUpdates({String countryCode = 'US'}) async {
     if (Platform.isIOS) {
-      if (appId != null) {
-        return await IosAppId(appId!, countryCode).fetchUpdate();
-      } else if (versionUrl != null) {
-        return await Url(versionUrl!).fetchUpdate();
-      } else {
-        throw Exception('One of the parameters must be provided for iOS');
-      }
+      assert(appId != null, "appId must not be null for iOS");
+      return await IosAppId(appId!, countryCode).fetchUpdate();
     } else if (Platform.isAndroid || Platform.isWindows) {
       assert(versionUrl != null,
           'versionUrl must not be null for the current platform.');
