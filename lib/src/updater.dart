@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app_installer/app_installer.dart';
+import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -86,7 +87,8 @@ class UpdateResult {
         "sha512": sha512
       };
 
-  Future<StreamController<DownloadProgress>> initializeUpdate() async {
+  Future<StreamController<DownloadProgress>> initializeUpdate(
+      {String? downloadPath}) async {
     if (Platform.isIOS) {
       await runUpdate(downloadUrl);
       throw Exception(
@@ -100,7 +102,8 @@ class UpdateResult {
         throw Exception("The download URL may be invalid.");
       }
       // Split a URL and retrieve the file name
-      var filePath = '${dir!.path}/${urlContent[urlContent.length - 1]}';
+      var filePath =
+          '${downloadPath ?? dir!.path}/${urlContent[urlContent.length - 1]}';
       return initDownload(filePath);
     } else {
       throw Exception('Platform not supported');
@@ -142,13 +145,16 @@ class UpdateResult {
   ///
   /// Android: apk
   ///
-  /// Windows: exe/msix
+  /// Windows: exe/msix/zip
   ///
   /// Application/Installer/App Store [uri]
   ///
   /// [autoExit] parent process, only applies to Windows
   Future<void> runUpdate(FilePath uri,
-      {bool autoExit = false, int exitDelay = 3000}) async {
+      {bool autoExit = false,
+      FilePath? exractPathUri,
+      String? executableFileName,
+      int exitDelay = 3000}) async {
     if (Platform.isIOS) {
       await canLaunch(downloadUrl)
           ? await launch(downloadUrl)
@@ -160,8 +166,17 @@ class UpdateResult {
       // A detached process has no connection to its parent,
       // and can keep running on its own when the parent dies
       try {
-        await Process.start(uri, [],
-            runInShell: true, mode: ProcessStartMode.detached);
+        if (uri.endsWith(".zip")) {
+          await extractFileToDisk(uri, exractPathUri!);
+        }
+        await Process.start(
+            exractPathUri != null
+                ? "${exractPathUri}\\${executableFileName!}"
+                : uri,
+            [],
+            runInShell: true,
+            mode: ProcessStartMode.detached);
+
         if (autoExit) {
           await Future.delayed(Duration(milliseconds: exitDelay));
           exit(0);
@@ -195,8 +210,7 @@ class UpdateManager {
   Future<UpdateResult?> fetchUpdates() async {
     if (Platform.isIOS) {
       assert(appId != null, "appId must not be null for iOS");
-      return await IosAppId(appId!, countryCode)
-          .fetchUpdate();
+      return await IosAppId(appId!, countryCode).fetchUpdate();
     } else if (Platform.isAndroid || Platform.isWindows) {
       assert(versionUrl != null,
           'versionUrl must not be null for the current platform.');
