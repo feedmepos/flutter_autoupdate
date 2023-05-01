@@ -192,7 +192,7 @@ class UpdateManager {
   /// [countryCode] is ISO 3166-1-alpha-2 country code
   ///
   /// Example: US, EU, UK, SG, MY
-  Future<UpdateResult?> fetchUpdates() async {
+  Future fetchUpdates() async {
     if (Platform.isIOS) {
       assert(appId != null, "appId must not be null for iOS");
       return await IosAppId(appId!, countryCode)
