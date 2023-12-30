@@ -95,13 +95,20 @@ class UpdateResult {
       var dir = Platform.isAndroid
           ? await getExternalStorageDirectory()
           : await getTemporaryDirectory();
-      var urlContent = downloadUrl.split('/');
-      if (urlContent.isEmpty) {
-        throw Exception("The download URL may be invalid.");
+      var urlContent = Uri.parse(downloadUrl);
+      if (urlContent.queryParameters.containsKey('filname')) {
+        var fileName = urlContent.queryParameters['filname'];
+        var filePath = '${dir!.path}/$fileName';
+        return initDownload(filePath);
+      } else {
+        var urlConten = downloadUrl.split('/');
+        if (urlConten.isEmpty) {
+          throw Exception("The download URL may be invalid.");
+        }
+        // Split a URL and retrieve the file name
+        var filePath = '${dir!.path}/${urlConten[urlConten.length - 1]}';
+        return initDownload(filePath);
       }
-      // Split a URL and retrieve the file name
-      var filePath = '${dir!.path}/${urlContent[urlContent.length - 1]}';
-      return initDownload(filePath);
     } else {
       throw Exception('Platform not supported');
     }
